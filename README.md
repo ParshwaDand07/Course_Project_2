@@ -1,6 +1,12 @@
 # Introduction to Data Mining Course Project 2
 
-The Statewide Planning and Research Cooperative System (SPARCS) Inpatient De-identified dataset is a wealth of information, containing discharge level detail on various aspects of hospital inpatient discharges in New York State during the year 2010. From patient characteristics such as age group, gender, race and ethnicity to diagnoses, treatments, services and charges - all data elements excluding those consideredidentifiable have been made available within this dataset. This data does not contain any protected health information (PHI) under the Health Insurance Portability and Accountability Act (HIPAA). Understanding the plethora of details in this data can give individuals insights into many varying aspects related to hospital care. Dive into understanding more about what goes on behind closed doors at hospitals with the SPARCS Inpatient De-identified Dataset!
+The dataset "New York State Hospital Inpatient Discharge" provides a comprehensive snapshot of hospital inpatient discharges within New York. It comprises a diverse set of features that offer insights into various aspects of patient care and hospital operations. Among the key features are geographic information, including the 'Health Service Area' and 'Hospital County,' which provide context about the hospital's location. 'Operating Certificate Number' serves as a unique hospital identifier. Patient-related attributes such as 'Age Group,' 'Gender,' 'Race,' and 'Ethnicity' offer demographic insights. The 'Length of Stay' feature quantifies the duration of a patient's hospital stay. 
+
+Additionally, the dataset includes healthcare-specific details like the 'Type of Admission' and 'Patient Disposition,' shedding light on how patients are admitted and the outcomes of their treatments. 'Discharge Year' indicates when the patient left the hospital. Clinical information is enriched with the 'CCS Diagnosis Code,' 'CCS Diagnosis Description,' 'CCS Procedure Code,' and 'CCS Procedure Description.' These provide diagnostic and procedural coding, facilitating healthcare analysis. The dataset incorporates the All Patient Refined (APR) system, with features such as 'APR DRG Code,' 'APR DRG Description,' 'APR MDC Code,' 'APR MDC Description,' 'APR Severity of Illness Code,' 'APR Severity of Illness Description,' and 'APR Risk of Mortality.' These APR attributes offer insights into patient understanding, diagnosis, and risk assessment. Finally, the 'Source of Payment 1' and 'Source of Payment 2' features indicate the payment sources for the patient's treatment. 
+
+In summary, this dataset provides a rich source of information for analyzing hospital inpatient discharges in New York State. Researchers, healthcare professionals, and policymakers can leverage these attributes to gain valuable insights into patient demographics, healthcare procedures, hospital performance, and more, ultimately contributing to informed decision-making and healthcare improvement initiatives.
+
+
 
 ## Table of Contents
 
@@ -8,11 +14,12 @@ The Statewide Planning and Research Cooperative System (SPARCS) Inpatient De-ide
 1. [Getting Started](#getting-started)
    - [Prerequisites](#prerequisites)
    - [Installation](#installation)
-2. [Data Preprocessing](#data-preprocessing)
+2. [Goal and Objectives](#Goal-and-Objectives)
+3. [Data Preprocessing](#data-preprocessing)
    - [Step 1: Data Loading](#step-1-data-loading)
    - [Step 2: Data Cleaning and Analysis](#step-2-Data-cleaning-and-analysis)
    - [step 3 : Data Transformation and Label Encoding](#Data-Transformation-and-Label-Encoding)
-3. [Model Training and Evaluation](#model-training-and-evaluation)
+4. [Model Training and Evaluation](#model-training-and-evaluation)
    - [Logistic Regression and Analysis](#logistic-regression-and-analysis)
    - [SGD Classifier and Analysis by Diagnosis](#SGD-Classifier-and-Analysis-by-Diagnosis)
    - [Linear Support Vector Classifier and Analysis by County](#Linear-Support-Vector-Classifier-and-Analysis-by-County)
@@ -20,7 +27,8 @@ The Statewide Planning and Research Cooperative System (SPARCS) Inpatient De-ide
    - [Random Forest Classifier and Analysis](#Random-Forest-Classifier-and-Analysis)
    - [XGBoost Classifier and Analysis by County](#XGBoost-Classifier-and-Analysis-by-County)
    - [AdaBoost Classifier and Analysis by Hospital Admission Types](#AdaBoost-Classifier-and-Analysis-by-Hospital-Admission-Types)
-4. [Conclustion](#model-comparison)
+5. [Conclustion](#model-comparison)
+6. [Gobal Contribution](#Gobal-Contribution)
 
 
 
@@ -36,6 +44,7 @@ List the software and libraries required to run the project.
 - Libraries (e.g., pandas, numpy, scikit-learn)
 
 ### Installation
+
 
 Provide instructions on how to install or set up the necessary software and libraries.
 
@@ -67,6 +76,16 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import precision_score, recall_score, confusion_matrix
 ```
+
+## Goal and Objectives
+
+Outline the goals and objectives of your project:
+
+- *Identifying Health Disparities*: Analyze regional variations in hospital inpatient discharges across New York State to identify disparities in healthcare access and diagnosis and procedure needs.
+
+- *Predicting Patient Needs*: Utilize demographic, diagnosis, and procedure data to predict patient needs, allowing healthcare facilities to better prepare and allocate resources efficiently.
+
+- *Improving Cost Efficiency*: Investigate correlations between different payment sources to optimize resource allocation and improve cost efficiency during inpatient visits.
 
 ## Data Preprocessing
 
@@ -735,8 +754,6 @@ hospital_data_final = hospital_data_final.drop(outlier_list)
 
 
 
-
-
 ## Model Training and Evaluation
 
 ### Logistic Regression and Analysis
@@ -1343,4 +1360,27 @@ for i, admission in enumerate(admissions):
 
     
 ![png](data-mining-cp-2-main_files/data-mining-cp-2-main_93_1.png)
-    
+
+
+## Conclustion
+
+Here's a brief conclusion based on our analysis:
+
+In this comprehensive analysis of the "New York State Hospital Inpatient Discharge" dataset, we applied various machine learning models to predict the APR Risk of Mortality, a critical indicator in healthcare. Our modeling efforts included Logistic Regression, Stochastic Gradient Descent Classifier (SGD), Linear Support Vector Classifier (Linear SVC), Decision Tree Classifier, Random Forest Classifier, XGBoost Classifier, and Adaboost.
+
+The results indicate that, on average, these models performed with a range of 75% to 80% accuracy, with precision, recall, and F1 scores aligning closely with the accuracy. This suggests that the models achieved consistent performance in predicting APR Risk of Mortality across the entire dataset. However, it's important to note that healthcare datasets often pose complex challenges, and the models' accuracy, precision, and recall may vary based on factors like the diversity of clinical conditions and patient demographics.
+
+Notably, when we segmented the data by specific criteria such as CCS Diagnosis Code, Hospital County, and Types of Admission, some models exhibited higher performance, occasionally surpassing 90% accuracy, precision, recall, and F1 scores. This demonstrates that tailoring the modeling approach to distinct subsets of the data can lead to improved predictive accuracy in certain cases.
+
+In summary, our analysis reveals the effectiveness of various machine learning models in predicting APR Risk of Mortality, with consistent performance across the entire dataset. Moreover, the ability to achieve exceptionally high performance in segmented data indicates the importance of understanding the nuances within healthcare data to optimize predictions. These findings can be valuable for healthcare practitioners and policymakers in assessing patient outcomes and making informed decisions for improved healthcare delivery and patient care.
+
+## Gobal Contribution
+- `Healthcare Disparity Awareness`: By identifying and addressing healthcare disparities within New York State, your project can raise awareness about the global issue of unequal healthcare access and outcomes. The methods and insights developed could serve as a model for addressing similar disparities in other regions or countries.
+
+- `Predictive Healthcare Planning`: The use of demographics, diagnosis, and procedure data to predict patient needs and prepare necessary resources can have broader applications in healthcare planning globally. It could help healthcare providers and facilities in different regions better allocate resources and enhance preparedness for a wide range of medical conditions.
+
+- `Cost Efficiency Models`: Investigating correlations between different payment sources and optimizing resource allocation is a valuable approach to improving cost efficiency in healthcare. Similar strategies could be adapted by healthcare organizations in various parts of the world to optimize resource allocation and control costs.
+
+- `Open Data and Collaboration`: If your project involves the use of open data sources or open-source tools, it can contribute to the global open data and collaboration movement. Sharing your project's methodologies, code, or insights with the global community can foster collaboration and innovation in healthcare research and resource allocation.
+
+- `Research and Policy Implications`: Your project may have research and policy implications that extend beyond New York State. Sharing your findings and recommendations can inform policymakers and researchers globally about effective strategies to reduce healthcare disparities and improve healthcare delivery.
