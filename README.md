@@ -464,7 +464,7 @@ sns.heatmap(hospital_data_final.corr(),annot=True, cmap='coolwarm',fmt=".2f")
 
 
     
-![png](images\data-mining-cp-2_67_1.png)
+![png](images/data-mining-cp-2_67_1.png)
     
 
 
@@ -822,19 +822,19 @@ plt.show()
 
 
     
-![png](images\acu.png)
+![png](images/acu.png)
     
 
 
 
     
-![png](images\pre.png)
+![png](images/pre.png)
     
 
 
 
     
-![png](images\rec.png)
+![png](images/rec.png)
     
 
 
@@ -864,5 +864,5 @@ plt.show()
 
 
     
-![png](images\all.png)
+![png](images/all.png)
     
