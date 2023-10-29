@@ -13,11 +13,14 @@ The Statewide Planning and Research Cooperative System (SPARCS) Inpatient De-ide
    - [Step 2: Data Cleaning and Analysis](#step-2-Data-cleaning-and-analysis)
    - [step 3 : Data Transformation and Label Encoding](#Data-Transformation-and-Label-Encoding)
 3. [Model Training and Evaluation](#model-training-and-evaluation)
-   - [Logistic Regression](#logistic-regression)
-   - [K-Nearest Neighbors (KNN)](#k-nearest-neighbors-knn)
-   - [Decision Tree Classifier](#decision-tree-classifier)
-   - [Random Forest Classifier](#random-forest-classifier)
-4. [Model Comparison](#model-comparison)
+   - [Logistic Regression and Analysis](#logistic-regression-and-analysis)
+   - [SGD Classifier and Analysis by Diagnosis](#SGD-Classifier-and-Analysis-by-Diagnosis)
+   - [Linear Support Vector Classifier and Analysis by County](#Linear-Support-Vector-Classifier-and-Analysis-by-County)
+   - [Decision Tree Classifier and Analysis](#Decision-Tree-Classifier-and-Analysis)
+   - [Random Forest Classifier and Analysis](#Random-Forest-Classifier-and-Analysis)
+   - [XGBoost Classifier and Analysis by County](#XGBoost-Classifier-and-Analysis-by-County)
+   - [AdaBoost Classifier and Analysis by Hospital Admission Types](#AdaBoost-Classifier-and-Analysis-by-Hospital-Admission-Types)
+4. [Conclustion](#model-comparison)
 
 
 
@@ -67,14 +70,167 @@ from sklearn.metrics import precision_score, recall_score, confusion_matrix
 
 ## Data Preprocessing
 
-Explain the data preprocessing steps performed in your project. Include code snippets with explanations.
-
 ### Step 1: Data Loading
 
-```python
+we load the dataset that contains information about hospital inpatient discharges in New York State for the year 2010. The data is read from a CSV file using the `pd.read_csv` function from the Pandas library.
 
-# Load the dataset
-hospital_data = pd.read_csv('hospital-inpatient-discharges-sparcs-de-identified-2010-1.csv', low_memory=False)
+The dataset is stored in the variable `hospital_data`, and we set `low_memory` to `False` to ensure that Pandas allocates sufficient memory for data processing.
+Now, let's take a closer look at the dataset and perform some exploratory data analysis to better understand its structure and content.
+
+
+```python
+hospital_data = pd.read_csv('/kaggle/input/2010-new-york-state-hospital-inpatient-discharge/hospital-inpatient-discharges-sparcs-de-identified-2010-1.csv', low_memory=False)
+```
+
+
+```python
+hospital_data.head(2)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>index</th>
+      <th>Health Service Area</th>
+      <th>Hospital County</th>
+      <th>Operating Certificate Number</th>
+      <th>Facility ID</th>
+      <th>Facility Name</th>
+      <th>Age Group</th>
+      <th>Zip Code - 3 digits</th>
+      <th>Gender</th>
+      <th>Race</th>
+      <th>Ethnicity</th>
+      <th>Length of Stay</th>
+      <th>Type of Admission</th>
+      <th>Patient Disposition</th>
+      <th>Discharge Year</th>
+      <th>CCS Diagnosis Code</th>
+      <th>CCS Diagnosis Description</th>
+      <th>CCS Procedure Code</th>
+      <th>CCS Procedure Description</th>
+      <th>APR DRG Code</th>
+      <th>APR DRG Description</th>
+      <th>APR MDC Code</th>
+      <th>APR MDC Description</th>
+      <th>APR Severity of Illness Code</th>
+      <th>APR Severity of Illness Description</th>
+      <th>APR Risk of Mortality</th>
+      <th>APR Medical Surgical Description</th>
+      <th>Source of Payment 1</th>
+      <th>Source of Payment 2</th>
+      <th>Source of Payment 3</th>
+      <th>Attending Provider License Number</th>
+      <th>Operating Provider License Number</th>
+      <th>Other Provider License Number</th>
+      <th>Birth Weight</th>
+      <th>Abortion Edit Indicator</th>
+      <th>Emergency Department Indicator</th>
+      <th>Total Charges</th>
+      <th>Total Costs</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>Capital/Adiron</td>
+      <td>Albany</td>
+      <td>101000.0</td>
+      <td>1.0</td>
+      <td>Albany Medical Center Hospital</td>
+      <td>18 to 29</td>
+      <td>NaN</td>
+      <td>F</td>
+      <td>White</td>
+      <td>Not Span/Hispanic</td>
+      <td>1</td>
+      <td>Emergency</td>
+      <td>Home or Self Care</td>
+      <td>2010</td>
+      <td>135.0</td>
+      <td>INTESTINAL INFECTION</td>
+      <td>0.0</td>
+      <td>NO PROC</td>
+      <td>249</td>
+      <td>NON-BACTERIAL GASTROENTERITIS, NAUSEA &amp; VOMITING</td>
+      <td>6</td>
+      <td>Diseases and Disorders of the Digestive System</td>
+      <td>1</td>
+      <td>Minor</td>
+      <td>Minor</td>
+      <td>Medical</td>
+      <td>Blue Cross</td>
+      <td>Self-Pay</td>
+      <td>NaN</td>
+      <td>3623.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0</td>
+      <td>N</td>
+      <td>Y</td>
+      <td>4476.23</td>
+      <td>1672.65</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>Capital/Adiron</td>
+      <td>Albany</td>
+      <td>101000.0</td>
+      <td>1.0</td>
+      <td>Albany Medical Center Hospital</td>
+      <td>50 to 69</td>
+      <td>NaN</td>
+      <td>M</td>
+      <td>White</td>
+      <td>Not Span/Hispanic</td>
+      <td>15</td>
+      <td>Emergency</td>
+      <td>Home w/ Home Health Services</td>
+      <td>2010</td>
+      <td>231.0</td>
+      <td>OTHER FRACTURE</td>
+      <td>61.0</td>
+      <td>OT OR PRCS VES NOT HEAD</td>
+      <td>912</td>
+      <td>MUSCULOSKELETAL &amp; OTHER PROCEDURES FOR MULTIPL...</td>
+      <td>25</td>
+      <td>Multiple Significant Trauma</td>
+      <td>3</td>
+      <td>Major</td>
+      <td>Extreme</td>
+      <td>Surgical</td>
+      <td>Insurance Company</td>
+      <td>Medicare</td>
+      <td>Blue Cross</td>
+      <td>216951.0</td>
+      <td>216951.0</td>
+      <td>NaN</td>
+      <td>0</td>
+      <td>N</td>
+      <td>Y</td>
+      <td>148612.34</td>
+      <td>51414.70</td>
+    </tr>
+  </tbody>
+</table>
+
 
 
 ### Step 2: Data Cleaning and Analysis
@@ -84,58 +240,57 @@ In this section, we perform exploratory data analysis (EDA) on the hospital data
 
 
 
-#### Checking for Missing Values
+#### Missing Data Analysis
 
-We start by checking the number of missing values for each column in the original `hospital_data` DataFrame.
-
+In this cell, we calculate the percentage of missing values for each column in the dataset. This information is important for understanding the data quality and deciding how to handle missing data during preprocessing.
 
 
 ```python
-hospital_data.isnull().sum()
+(hospital_data.isnull().sum())/hospital_data.shape[0]
 ```
 
 
 
 
-    index                                        0
-    Health Service Area                       4887
-    Hospital County                           4887
-    Operating Certificate Number              4887
-    Facility ID                               4887
-    Facility Name                                0
-    Age Group                                    0
-    Zip Code - 3 digits                       3201
-    Gender                                       0
-    Race                                         0
-    Ethnicity                                    0
-    Length of Stay                               0
-    Type of Admission                            0
-    Patient Disposition                        103
-    Discharge Year                               0
-    CCS Diagnosis Code                        2273
-    CCS Diagnosis Description                 2273
-    CCS Procedure Code                        2273
-    CCS Procedure Description                 2273
-    APR DRG Code                                 0
-    APR DRG Description                          0
-    APR MDC Code                                 0
-    APR MDC Description                          0
-    APR Severity of Illness Code                 0
-    APR Severity of Illness Description        241
-    APR Risk of Mortality                      241
-    APR Medical Surgical Description             0
-    Source of Payment 1                          0
-    Source of Payment 2                     810381
-    Source of Payment 3                    2040841
-    Attending Provider License Number         4887
-    Operating Provider License Number       670818
-    Other Provider License Number          2133991
-    Birth Weight                                 0
-    Abortion Edit Indicator                      0
-    Emergency Department Indicator               0
-    Total Charges                                0
-    Total Costs                                  0
-    dtype: int64
+    index                                  0.000000
+    Health Service Area                    0.001864
+    Hospital County                        0.001864
+    Operating Certificate Number           0.001864
+    Facility ID                            0.001864
+    Facility Name                          0.000000
+    Age Group                              0.000000
+    Zip Code - 3 digits                    0.001221
+    Gender                                 0.000000
+    Race                                   0.000000
+    Ethnicity                              0.000000
+    Length of Stay                         0.000000
+    Type of Admission                      0.000000
+    Patient Disposition                    0.000039
+    Discharge Year                         0.000000
+    CCS Diagnosis Code                     0.000867
+    CCS Diagnosis Description              0.000867
+    CCS Procedure Code                     0.000867
+    CCS Procedure Description              0.000867
+    APR DRG Code                           0.000000
+    APR DRG Description                    0.000000
+    APR MDC Code                           0.000000
+    APR MDC Description                    0.000000
+    APR Severity of Illness Code           0.000000
+    APR Severity of Illness Description    0.000092
+    APR Risk of Mortality                  0.000092
+    APR Medical Surgical Description       0.000000
+    Source of Payment 1                    0.000000
+    Source of Payment 2                    0.309054
+    Source of Payment 3                    0.778313
+    Attending Provider License Number      0.001864
+    Operating Provider License Number      0.255829
+    Other Provider License Number          0.813838
+    Birth Weight                           0.000000
+    Abortion Edit Indicator                0.000000
+    Emergency Department Indicator         0.000000
+    Total Charges                          0.000000
+    Total Costs                            0.000000
+    dtype: float64
 
 
 
@@ -168,57 +323,123 @@ hospital_data['Discharge Year'].value_counts()
 
 
 
-#### Data Preprocessing
-For further analysis, we create a new DataFrame hospital_data_final by dropping several columns that are not relevant to our analysis.
+#### Data Column Selection
+
+In this cell, we modify the dataset by dropping specific columns that are not necessary for our analysis or contain redundant information. Here's the reasons behind dropping each of these columns:
+
+- `Discharge Year, Abortion Edit Indicator`: This column are dropped because it contains a single constant value for the entire dataset, making it non-informative.
+
+- `Other Provider License Number`, `Operating Provider License Number`, `Source of Payment 3`, `Source of Payment 2`: These columns are removed due to a high percentage of missing values, which may not provide meaningful information.
+
+- `index`: We don't need the index column, as Pandas automatically assigns row indices to the DataFrame.
+
+- `CCS Diagnosis Description`, `CCS Procedure Description`, `APR DRG Description`, `APR MDC Description`, `APR Severity of Illness Description`: These columns are not needed because the information they contain can be obtained from label-encoded columns in the dataset, making them redundant.
+
+By removing these columns, we streamline the dataset and focus on the most relevant features for our analysis. This helps reduce dimensionality and improve the efficiency of subsequent data processing steps.
 
 
 ```python
-hospital_data_final = hospital_data.drop(['Abortion Edit Indicator','Discharge Year','Other Provider License Number', 'Operating Provider License Number', 'Source of Payment 3', 'Source of Payment 2', 'index','CCS Diagnosis Description','CCS Procedure Description', 'APR DRG Description', 'APR MDC Description', 'APR Severity of Illness Description'], axis=1)
+hospital_data_final = hospital_data.drop(['Discharge Year','Abortion Edit Indicator','Other Provider License Number', 'Operating Provider License Number', 'Source of Payment 3', 'Source of Payment 2', 'index','CCS Diagnosis Description', 'CCS Procedure Description', 'APR DRG Description', 'APR MDC Description', 'APR Severity of Illness Description'], axis=1)
+```
+
+
+
+#### Data Distribution and Class Frequency
+
+In this cell, we create plots to visualize the distribution of data and the frequency of classes in specific columns. The columns under analysis are:
+
+- `Health Service Area`: This plot helps us understand the geographical distribution of health service areas within the dataset.
+
+- `Zip Code - 3 digits`: Visualizing the distribution of zip codes in three digits can help identify any regional trends.
+
+
+Visualizing these distributions and class frequencies is a crucial step in exploratory data analysis (EDA) to gain a better understanding of the dataset and identify any patterns or anomalies in the data.
+
+
+```python
+sns.histplot(data = hospital_data_final, x='Health Service Area')
+plt.xticks(rotation=45)
+plt.show()
+```
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_15_0.png)
+
+
+```python
+plt.figure(figsize=(30,7))
+sns.histplot(data = hospital_data_final, x='Zip Code - 3 digits', kde = True)
+plt.xticks(rotation=60,fontsize=15)
+plt.show()
+```
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_18_0.png)
+    
+
+
+
+#### Handling Null Values
+
+So, how I handle null values in the dataset. Specifically, we address the following columns with null values:
+
+- `Health Service Area`, `Hospital County`, `Operating Certificate Number`, `Facility ID`, and `Attending Provider License Number`: These columns have 4887 null values, which occur in the same rows. Since this represents a small fraction of the total dataset (26 lakhs), I choose to drop the rows with null values in these columns to ensure data integrity.
+
+- `CCS Diagnosis Code` and `CCS Procedure Code`: These columns have 2273 null values. To maintain data consistency, I also choose to drop the rows with null values in these columns.
+
+- `APR Risk of Mortality`: This column contains the target variable I aim to predict. It has 241 null values. To avoid introducing incorrect information, I opt to drop rows with null values in this column. These rows do not contribute to the prediction task.
+
+By carefully handling null values, we maintain data quality and ensure that our analysis and modeling are based on clean and reliable data.
+
+```python
+hospital_data_final.isnull().sum()
 ```
 
 
 
 
-
-
-
-#### Handling Missing Values
-Next, we create a new DataFrame, hospital_data_final, by dropping rows with missing values in specific columns, including 'Health Service Area,' 'CCS Diagnosis Code,' and 'APR Risk of Mortality.' This step helps us ensure that the dataset contains only the rows with complete information in these critical columns.
-
-
-| Column Name                           | Missing Values |
-|--------------------------------------|----------------|
-| Health Service Area                   | 4,887          |
-| Hospital County                       | 4,887          |
-| Operating Certificate Number          | 4,887          |
-| Facility ID                           | 4,887          |
-| Attending Provider License Number     | 4,887          |
-
-| Column Name                           | Missing Values |
-|--------------------------------------|----------------|
-| CCS Diagnosis Code                    | 2,273          |
-| CCS Diagnosis Description             | 2,273          |
-| CCS Procedure Code                    | 2,273          |
-| CCS Procedure Description             | 2,273          |
-
-| Column Name                           | Missing Values |
- |--------------------------------------|----------------|
- | APR Severity of Illness Description  | 241            |
- | APR Risk of Mortality Description    | 241            |
-
-All this columns have null values in same rows  . so we decided to drop them 
-
+    Health Service Area                  4887
+    Hospital County                      4887
+    Operating Certificate Number         4887
+    Facility ID                          4887
+    Facility Name                           0
+    Age Group                               0
+    Zip Code - 3 digits                  3201
+    Gender                                  0
+    Race                                    0
+    Ethnicity                               0
+    Length of Stay                          0
+    Type of Admission                       0
+    Patient Disposition                   103
+    CCS Diagnosis Code                   2273
+    CCS Procedure Code                   2273
+    APR DRG Code                            0
+    APR MDC Code                            0
+    APR Severity of Illness Code            0
+    APR Risk of Mortality                 241
+    APR Medical Surgical Description        0
+    Source of Payment 1                     0
+    Attending Provider License Number    4887
+    Birth Weight                            0
+    Abortion Edit Indicator                 0
+    Emergency Department Indicator          0
+    Total Charges                           0
+    Total Costs                             0
+    dtype: int64
 
 ```python
 hospital_data_final = hospital_data_final.dropna(subset=['Health Service Area', 'CCS Diagnosis Code', 'APR Risk of Mortality'])
 ```
+#### Handling Null Values in 'Patient Disposition'
 
+ The decision to fill these null values with 'Home or Self Care' is based on the following reasons:
 
+- 'Home or Self Care' is chosen as the fill value because it represents a common and frequently occurring class within the 'Patient Disposition' feature. This choice is made to minimize the impact of null values on the dataset, as it is a common disposition for many patients.
 
+By filling null values with a frequently occurring class, we ensure that the data remains representative of real-world scenarios while avoiding the introduction of bias or incorrect information.
 
-#### Handling Missing Values in 'Patient Disposition'
-We start by analyzing the distribution of values in the 'Patient Disposition' column and display the counts of each unique value.
-We fill missing values in the 'Patient Disposition' column with the value 'Home or Self Care' to provide a default disposition for records with missing information.
 
 
 ```python
@@ -257,6 +478,7 @@ hospital_data_final['Patient Disposition'].value_counts()
 hospital_data_final['Patient Disposition'] = hospital_data_final['Patient Disposition'].fillna('Home or Self Care')
 ```
 
+
 #### Data Transformation: 'Zip Code - 3 digits'
 Next, we perform transformations on the 'Zip Code - 3 digits' column. First, we replace any occurrences of 'OOS' with '000'. Then, we extract the first three digits from the remaining values.
 
@@ -270,8 +492,26 @@ hospital_data_final['Zip Code - 3 digits'] = hospital_data_final['Zip Code - 3 d
 hospital_data_final['Zip Code - 3 digits'] = hospital_data_final['Zip Code - 3 digits'].str[:3]
 ```
 
-#### Analysis of 'Zip Code - 3 digits'
-We analyze the distribution of values in the 'Zip Code - 3 digits' column and display the counts of each unique value
+#### Preprocessing 'Zip Code - 3 digits'
+
+The column contains string values that may have variations, such as '100' and '100.0'. To ensure consistency, we have performed the following preprocessing steps:
+
+1. Truncating Zip Codes: We have truncated all zip code values to a uniform length of 3 characters by taking only the first 3 characters of the string. This ensures that zip codes are consistent in format and facilitates analysis.
+
+2. Handling 'OOS' Values: There is a special class denoted as 'OOS', which stands for 'out of stock'. To make it consistent with other zip codes, we have replaced 'OOS' with '000'
+
+By applying these preprocessing steps, we maintain data consistency and make it easier to work with zip code information in subsequent analysis and modeling.
+
+
+
+```python
+hospital_data_final['Zip Code - 3 digits'] = hospital_data_final['Zip Code - 3 digits'].replace('OOS', '000')
+```
+
+
+```python
+hospital_data_final['Zip Code - 3 digits'] = hospital_data_final['Zip Code - 3 digits'].str[:3]
+```
 
 
 ```python
@@ -307,40 +547,14 @@ hospital_data_final['Zip Code - 3 digits'].value_counts()
     110     30818
     136     29869
     132     29731
-    148     29171
-    128     27337
-    134     24615
-    141     23735
-    116     23470
-    111     22881
-    124     20976
-    147     20795
-    131     19465
-    123     19009
-    122     18986
-    133     17664
-    129     17292
-    138     14849
-    137     14793
-    127     13877
-    135     12150
-    126     12082
-    143     11301
-    108     10702
-    106     10169
-    139      9488
-    118      9268
-    149      8448
-    101      6348
+
     Name: count, dtype: int64
 
+#### Handling Null Values in 'Zip Code - 3 digits'
 
+- Geographic Association: Zip codes are often associated with specific geographic regions, in this case, 'Hospital County.' Therefore, the mode zip code for a particular county is likely to be a good representation of the area's zip codes.
 
-
-####  Handling Missing Values in 'Zip Code - 3 digits'
-Lastly, we fill missing values in the 'Zip Code - 3 digits' column with the mode of the corresponding 'Zip Code - 3 digits' values for each 'Hospital County.'
-
-
+- Data Imputation: By using the mode of the zip codes within each 'Hospital County,' we aim to impute missing values with values that are most representative of the location, reducing the potential for introducing incorrect or biased information.
 
 
 
@@ -349,31 +563,46 @@ hospital_data_final['Zip Code - 3 digits'] = hospital_data_final['Zip Code - 3 d
 ```
 
 
+```python
+hospital_data_final['Age Group'].value_counts()
+```
+
+
+
+
+    Age Group
+    70 or Older    724471
+    50 to 69       679466
+    30 to 49       544536
+    0 to 17        386842
+    18 to 29       279420
+    Name: count, dtype: int64
+
+    
+
+
 ### step 3 : Data Transformation and Label Encoding
-
-In this section, we perform data transformation and label encoding on selected columns in the `hospital_data_final` DataFrame. We also handle the 'Length of Stay' column.
-
-
-
 
 #### Label Encoding
 
-We use label encoding to transform categorical columns into numerical values for modeling. The following columns are encoded:
-- 'Zip Code - 3 digits'
-- 'Health Service Area'
-- 'Hospital County'
-- 'Facility Name'
-- 'Gender'
-- 'Race'
-- 'Ethnicity'
-- 'Type of Admission'
-- 'Patient Disposition'
-- 'APR Risk of Mortality'
-- 'APR Medical Surgical Description'
-- 'Source of Payment 1'
-- 'Emergency Department Indicator'
-- 'Age Group'
+I performed label encoding on selected categorical columns to convert them into numerical values. Label encoding is a common technique used to prepare categorical data for machine learning models. The columns that have undergone label encoding are:
 
+- `Zip Code - 3 digits`
+- `Health Service Area`
+- `Hospital County`
+- `Facility Name`
+- `Gender`
+- `Race`
+- `Ethnicity`
+- `Type of Admission`
+- `Patient Disposition`
+- `APR Risk of Mortality`
+- `APR Medical Surgical Description`
+- `Source of Payment 1`
+- `Emergency Department Indicator`
+- `Age Group`
+
+Label encoding assigns a unique integer to each category within these columns. This transformation is essential for machine learning models, as they require numerical inputs. However, it's important to note that label encoding may introduce ordinal relationships between categories, which should be considered in model interpretation.
 
 
 
@@ -381,8 +610,17 @@ We use label encoding to transform categorical columns into numerical values for
 hospital_data_final[['Zip Code - 3 digits','Health Service Area','Hospital County','Facility Name','Gender','Race','Ethnicity','Type of Admission','Patient Disposition','APR Risk of Mortality','APR Medical Surgical Description','Source of Payment 1','Emergency Department Indicator','Age Group']] = hospital_data_final[['Zip Code - 3 digits','Health Service Area','Hospital County','Facility Name','Gender','Race','Ethnicity','Type of Admission','Patient Disposition','APR Risk of Mortality','APR Medical Surgical Description','Source of Payment 1','Emergency Department Indicator','Age Group']].apply(LabelEncoder().fit_transform)
 ```
 
-#### Data Transformation: 'Length of Stay'
-To handle the 'Length of Stay' column, we first identify and replace a specific value 'a' with '120' (an example for illustration).
+
+#### Data Type Conversion and Preprocessing for 'Length of Stay'
+
+- Checking Data Type: Initially, we check the data type of the first entry in the 'Length of Stay' column, which is a string ('str'). This initial check helps us understand its format and raises the question of whether it should be converted to a numerical format.
+
+- Replacing '120 +': We notice that some entries have '120 +' in the 'Length of Stay' column. To maintain uniformity, we replace '120 +' with '120'.
+
+- Data Type Conversion Consideration: While the 'Length of Stay' column can be label encoded, it's essential to consider that it represents the number of days a patient has stayed in the hospital. Label encoding may not be suitable in this context since 'Length of Stay' is a numeric attribute with ordinal meaning. Converting it to a numeric data type allows for meaningful analysis, mathematical operations, and modeling without losing the ordinal nature of the variable.
+
+By performing these steps and keeping 'Length of Stay' as a numeric attribute, we ensure that the data remains in a format that accurately represents the patient's length of stay and is beneficial for analysis.
+
 
 
 ```python
@@ -398,37 +636,8 @@ type(hospital_data_final['Length of Stay'][0])
 
 
 ```python
-a=hospital_data_final['Length of Stay'][14]
-a
+hospital_data_final['Length of Stay'] = hospital_data_final['Length of Stay'].str.replace('120 +', '120')
 ```
-
-
-
-
-    '120 +'
-
-
-
-
-```python
-hospital_data_final['Length of Stay'] = hospital_data_final['Length of Stay'].str.replace(a, '120')
-```
-
-Then, we define a custom function custom_length_of_stay to convert the 'Length of Stay' values to integers. It removes the '+' symbol from values ending with '+' and converts the remaining values to integers.
-
-
-```python
-def custom_length_of_stay(val):
-    if val.endswith('+'):
-        return int(val.rstrip('+'))
-    return int(val)
-
-hospital_data_final['Length of Stay'] = hospital_data_final['Length of Stay'].apply(custom_length_of_stay)
-```
-
-
-
-After these transformations, we convert the 'Length of Stay' column to numeric data type.
 
 
 ```python
@@ -436,17 +645,15 @@ hospital_data_final['Length of Stay'] = pd.to_numeric(hospital_data_final['Lengt
 ```
 
 
-
-
-
-#### Correlation Analysis and Feature Selection
-
-In this section, we perform correlation analysis and feature selection on the `hospital_data_final` DataFrame.
-
-
 #### Correlation Heatmap
 
-We start by creating a correlation heatmap to visualize the relationships between the numerical variables in the dataset. The heatmap displays correlations between columns, and values are annotated for clarity.
+I created a heatmap to visualize the correlation between different features in the dataset. The heatmap is generated using the Seaborn library, and it provides insights into the relationships between variables.
+
+- `plt.figure(figsize=(20, 15))`: We set the figure size for the heatmap to make it more visually informative.
+
+- `sns.heatmap(hospital_data_final.corr(), annot=True, cmap='coolwarm', fmt=".2f")`: The heatmap is created by plotting the correlation matrix of the dataset. The `annot=True` parameter adds numeric values in each cell, providing the exact correlation coefficients. The `cmap` parameter specifies the color map, and `fmt=".2f"` formats the values to display two decimal places.
+
+By examining the correlation heatmap, we can identify potential relationships and dependencies between features, which can guide feature selection, model building, and further analysis.
 
 
 
@@ -458,39 +665,325 @@ sns.heatmap(hospital_data_final.corr(),annot=True, cmap='coolwarm',fmt=".2f")
 
 
 
-    <AxesSubplot:>
-
-
-
 
     
-![png](images/data-mining-cp-2_67_1.png)
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_53_1.png)
     
 
 
-#### Feature Selection
-Next, we perform feature selection by removing columns that are less relevant to the analysis. We drop the following columns from the hospital_data_final DataFrame:
+#### Handling Multicollinearity by Dropping Columns
 
-'APR DRG Code'
-'Operating Certificate Number'
-'Total Charges'
+I have taken some steps to address multicollinearity in the dataset by dropping specific columns. The columns removed are:
+
+- `APR DRG Code`: This column is dropped because it is highly correlated with 'APR MDC Code.' Multicollinearity, where two or more features are highly correlated, can lead to issues in modeling and interpretation.
+
+- `Total Charges`: As this column is highly correlated with 'Total Costs,' we choose to remove it to avoid redundancy and multicollinearity.
+
+- `Operating Certificate Number`: This column is highly correlated with 'Facility ID' and also highly negatively correlated with 'Zip Code - 3 digits.' To mitigate multicollinearity, we opt to remove it.
+
+By eliminating these columns, we aim to maintain a more independent set of features, which can improve the performance and interpretability of our analysis and modeling.
 
 
 
 ```python
-hospital_data_final = hospital_data_final.drop(['APR DRG Code','Operating Certificate Number','Total Charges'], axis=1)
+hospital_data_final = hospital_data_final.drop(['APR DRG Code', 'Total Charges', 'Operating Certificate Number'], axis=1)
+```
+
+
+
+#### Outlier Detection and Removal
+
+I have performed the detection and removal of outliers in the dataset. Outliers are data points that significantly deviate from the typical distribution of a feature and can potentially introduce noise into the analysis. We focus on the following features for outlier detection because they have continous values and it can have outliers:
+
+- `Length of Stay`: The length of stay in the hospital.
+- `Attending Provider License Number`: The license number of the attending provider.
+- `Total Costs`: The total costs associated with the patient's stay.
+
+The steps for outlier detection are as follows:
+
+1. Calculate the first quartile (Q1) and third quartile (Q3) for each feature.
+2. Compute the interquartile range (IQR) by subtracting Q1 from Q3.
+3. Determine lower and upper bounds by applying a user-defined multiplier (1.5 times the IQR) to the IQR.
+4. Identify and collect the indices of data points that fall outside these bounds as outliers.
+
+Finally, we remove the identified outliers from the dataset by dropping the corresponding rows.
+
+By performing this outlier detection and removal, we aim to enhance the robustness and reliability of our analysis by eliminating extreme data points that could adversely affect our results.
+
+
+
+```python
+outlier_step = 1.5
+features = ['Length of Stay','Attending Provider License Number','Total Costs']
+
+outlier_list = []
+
+for column in features:
+    Q1 = np.percentile(hospital_data_final[column], 25)
+    Q3 = np.percentile(hospital_data_final[column], 75)
+
+    IQR = Q3 - Q1
+    
+    lower_bound = Q1 - outlier_step * IQR
+    upper_bound = Q3 + outlier_step * IQR
+    
+    outliers = hospital_data_final[(hospital_data_final[column] < lower_bound) | (hospital_data_final[column] > upper_bound)].index
+    outlier_list.extend(outliers)
+
+hospital_data_final = hospital_data_final.drop(outlier_list)
 ```
 
 
 
 
-#### Data Preparation for Machine Learning
 
-In this section, we prepare the data for machine learning by splitting it into features (X) and the target variable (y). We also perform data scaling and set up batch processing for model training.
+## Model Training and Evaluation
+
+### Logistic Regression and Analysis
+
+I performed logistic regression and analysis separately for each 'Hospital County' in the dataset. The primary steps and details are as follows:
+
+- **Parameter Grid for Logistic Regression**: We define a parameter grid for hyperparameter tuning of the logistic regression model, including parameters like penalty, C, solver, max_iter, and multi_class.
 
 
-We split the dataset into features (`X`) and the target variable (`y`). The target variable, 'APR Risk of Mortality,' is separated from the features.
 
+- **Data Preprocessing**: For each county, we extract the relevant data and perform the following preprocessing steps:
+    - Split the data into features (X) and the target variable (y).
+    - Scale the features using Min-Max scaling (I used Min-Max scaling because I didn't find that this data is normally distributed).
+
+- **Logistic Regression Model**: We use GridSearchCV to perform hyperparameter tuning for the logistic regression model. The best hyperparameters are selected based on accuracy.
+
+- **Model Evaluation**:  we evaluate the logistic regression model on the test data and compute various performance metrics, including accuracy, precision, recall, and F1-score.
+
+
+
+```python
+X_train, X_test, y_train, y_test = train_test_split(data_df, new_df['APR Risk of Mortality'], random_state=42, test_size=0.20)
+```
+
+
+```python
+size_scaler = preprocessing.StandardScaler().fit(X_train)
+X_train_scaled = size_scaler.transform(X_train)
+X_test_scaled = size_scaler.transform(X_test)
+X_train_scaled.shape, X_test_scaled.shape
+```
+
+
+    ((17100, 23), (4275, 23))
+
+
+
+```python
+params_logistic = {
+                'multi_class': ['ovr', 'multinomial'],
+                'C':[0.1, 1, 1.5, 3, 10],
+                'penalty':[ 'l2'],
+                'solver':['lbfgs',  'newton-cg',  'sag', 'saga']
+
+             }
+```
+
+
+```python
+logistc_reg = GridSearchCV(estimator=LogisticRegression(), param_grid=params_logistic, scoring='accuracy', cv=3)
+logistc_reg.fit(X_train_scaled, y_train)
+
+print("tuned hpyerparameters :(best parameters) ",logistc_reg.best_params_)
+print("best score :",logistc_reg.best_score_)
+```
+
+    tuned hpyerparameters :(best parameters)  {'C': 3, 'multi_class': 'multinomial', 'penalty': 'l2', 'solver': 'sag'}
+    best score : 0.7630994152046784
+
+
+
+```python
+y_pred = logistc_reg.predict(X_test_scaled )
+print(f"accuracy : {accuracy_score(y_test, y_pred)}")
+print(f"recall : {recall_score(y_test, y_pred, average='weighted')}")
+print(f"precision : {precision_score(y_test, y_pred, average='weighted')}")
+print(f"f1 score : {f1_score(y_test, y_pred, average='weighted')}")
+
+```
+
+    accuracy : 0.7550877192982456
+    recall : 0.7550877192982456
+    precision : 0.7394302976245558
+    f1 score : 0.7428160820172108
+
+
+### SGD Classifier and Analysis by Diagnosis
+
+
+In this code cell, we perform analysis using the SGD Classifier . The primary steps and details are as follows:
+
+- **Parameter Grid for SGD Classifier**:  We define a parameter grid for hyperparameter tuning of the Decision Tree Classifier, including parameters like loss, penalty, alpha, and max_iter.
+
+
+- **Data Preprocessing**: For each Diagnosis, we extract the relevant data and perform the following preprocessing steps:
+    - Drop the 'CCS Diagnosis Code' column as it is used for Diagnosis-wise analysis.
+    - Split the data into features (X) and the target variable (y).
+    - Scale the features using Min-Max scaling (I used Min-Max scaling because I didn't find that this data is normally distributed).
+
+    
+- **SGD Classifier**: We use GridSearchCV to perform hyperparameter tuning for the SGD Classifier. The best hyperparameters are selected based on accuracy.
+
+- **Model Evaluation**:  we evaluate the RFC model on the test data and compute various performance metrics, including accuracy, 
+
+
+
+
+```python
+sgd_params = {
+    'loss': 'log',              
+    'penalty': 'l2',            
+    'alpha': 0.0001,            
+    'max_iter': 200,            
+    'random_state': 0,          
+}
+```
+
+
+```python
+ccs = sorted(df['CCS Diagnosis Code'].unique())
+for i, c in enumerate(ccs):
+    if i not in l:
+        df_1 = df[df['CCS Diagnosis Code'] == c].copy() 
+        df_1.drop(['CCS Diagnosis Code'], axis=1, inplace=True)
+    
+        X = df_1.drop('APR Risk of Mortality', axis=1)
+        y = df_1['APR Risk of Mortality']
+    
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    
+        sc = MinMaxScaler()
+        X_train_scaled = sc.fit_transform(X_train)
+        X_test_scaled = sc.transform(X_test)
+    
+        logistic_regression = SGDClassifier(**sgd_params)
+        logistic_regression.fit(X_train_scaled, y_train)
+
+        y_pred = knn_classifier.predict(X_test_scaled)
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f'Accuracy: {accuracy}\n\n')
+
+```
+
+    Accuracy: 0.09691702197441784
+
+### Linear Support Vector Classifier and Analysis by County
+
+In this code cell, we perform linear support vector classification and analysis separately for each 'Hospital County' in the dataset. The primary steps and details are as follows:
+
+- **Parameter Grid for Linear Support Vector Classifier**: We define a parameter grid for hyperparameter tuning of the linear support vector classifier (LinearSVC), including parameters like penalty (l1 or l2) and C (regularization parameter).
+
+- **Iterating Through Counties**: We loop through each 'Hospital County' in the dataset and perform analysis separately for each county. We create subplots for visualization.
+
+- **Data Preprocessing**: For each county, we extract the relevant data and perform the following preprocessing steps:
+    - Drop the 'Hospital County' column as it is used for county-wise analysis.
+    - Split the data into features (X) and the target variable (y).
+    - Scale the features using Min-Max scaling (I used Min-Max scaling because I didn't find that this data is normally distributed).
+    - Apply Principal Component Analysis (PCA) to reduce dimensionality while retaining 95% of the variance in the data.
+
+- **Linear Support Vector Classifier (LinearSVC)**: We use GridSearchCV to perform hyperparameter tuning for the LinearSVC model. The best hyperparameters are selected based on accuracy.
+
+- **Model Evaluation**: For each county, we evaluate the LinearSVC model on the test data and compute various performance metrics, including accuracy, precision, recall, and F1-score. We also create a confusion matrix to visualize the model's performance.
+
+- **Plotting Results**: The results, including confusion matrices and performance metrics, are plotted and displayed for each county. The subplots are organized in a grid, with up to three counties per row.
+
+
+
+
+```python
+param_svc = {
+                'penalty' : ['l1', 'l2'],
+                'C': [10, 100],
+             }
+```
+
+
+```python
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+fig.suptitle('Linear Support Vector Classifier')
+
+for i, county in enumerate(counties):
+    df = hospital_data_final[hospital_data_final['Hospital County'] == county].copy() 
+    df.drop(['Hospital County'], axis=1, inplace=True)
+    
+    X = df.drop('APR Risk of Mortality', axis=1)
+    y = df['APR Risk of Mortality']
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    
+    sc = MinMaxScaler()
+    X_train_sc = sc.fit_transform(X_train)
+    X_test_sc = sc.transform(X_test)
+    
+    pca = PCA(n_components=0.95)
+    X_train_scaled = pca.fit_transform(X_train_sc)
+    X_test_scaled = pca.transform(X_test_sc)
+    
+    svc = GridSearchCV(LinearSVC(), param_grid = param_svc, cv=2, scoring='accuracy')
+    svc.fit(X_train_scaled, y_train)
+    
+    y_pred = svc.predict(X_test_scaled)
+    
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average='weighted')
+    recall = recall_score(y_test, y_pred, average='weighted')
+    f1 = f1_score(y_test, y_pred, average='weighted')
+    
+    cm = confusion_matrix(y_test, y_pred)
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot(cmap='viridis', ax=axs[i % 3])
+    disp.ax_.set_title(f'County {i} - Accuracy: {accuracy:.2f}\nPrecision: {precision:.2f}, Recall: {recall:.2f}, F1: {f1:.2f}', fontsize=10)
+
+    if i % 3 == 2 or i == len(counties) - 1:
+        plt.show()
+        if i != len(counties) - 1:
+            fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+```
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_73_0.png)
+    
+
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_73_1.png)
+    
+
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_73_2.png)
+
+
+
+### Decision Tree Classifier and Analysis 
+
+In this code cell, we perform analysis using the Decision Tree Classifier . The primary steps and details are as follows:
+
+- **Parameter Grid for Decision Tree Classifier**:  We define a parameter grid for hyperparameter tuning of the Decision Tree Classifier, including parameters like criterion and max_depth
+
+
+- **Data Preprocessing**: For each county, we extract the relevant data and perform the following preprocessing steps:
+    - Split the data into features (X) and the target variable (y).
+    - Scale the features using Min-Max scaling (I used Min-Max scaling because I didn't find that this data is normally distributed).
+    - divide the data into batches of size (12800)
+
+    
+- **Decision Tree Classifier**: We use GridSearchCV to perform hyperparameter tuning for the Decision Tree Classifier. The best hyperparameters are selected based on accuracy.
+
+- **Model Evaluation**:  we evaluate the Decision Tree Classifier model on the test data and compute various performance metrics, including accuracy, precision, recall, support, and F1-score. We also create a confusion matrix to visualize the model's performance. 
+
+
+- **Plotting Results**:  confusion matrices is plotted and displayed for Decision Tree Classifier 
 
 
 ```python
@@ -498,15 +991,19 @@ X = hospital_data_final.drop('APR Risk of Mortality', axis=1)
 y = hospital_data_final['APR Risk of Mortality']
 ```
 
-We further split the data into training and testing sets. In this case, 80% of the data is used for training, and 20% is reserved for testing. The random state is set to ensure reproducibility.
-
 
 ```python
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 ```
 
-#### Data Scaling
-To standardize the feature values, we use the Min-Max scaling method with MinMaxScaler. We transform the training and testing data separately.
+
+```python
+batch_size = 128000
+num_batches = len(X_train) // batch_size
+```
+
+
+
 
 
 ```python
@@ -515,151 +1012,6 @@ X_train_scaled = sc.fit_transform(X_train)
 X_test_scaled = sc.transform(X_test)
 ```
 
-#### Batch Processing
-We define a batch size of 128,000 as the number of samples in each batch. We also calculate the number of batches needed for the training data based on the batch size and the total number of samples.
-
-These data preparation steps are essential for machine learning, including splitting data into training and testing sets and scaling features. Additionally, batch processing may be useful for model training and evaluation, particularly for large datasets.
-
-
-```python
-batch_size = 128000
-
-len(X_train)
-
-num_batches = len(X_train) // batch_size
-num_batches
-```
-
-    16
-
-
-
-## Model Training and Evaluation
-
-In this section, we perform model training and evaluation using Logistic Regression and k-Nearest Neighbors (KNN) classifiers. We use batch processing and grid search for hyperparameter tuning.
-
-
-### Logistic Regression
-
-We start by defining a parameter grid for hyperparameter tuning with logistic regression. We consider various values for 'C' (regularization strength), 'penalty' (regularization type), 'solver,' 'multi_class,' and 'max_iter.' 
-
-
-
-```python
-param_logistic = {
-    'C': [ 0.1, 1, 10],
-    'penalty': ['l1', 'l2'] ,
-    'solver': ['liblinear', 'saga']  ,
-    'multi_class': ['ovr'],
-    'max_iter': [800],
-}
-```
-
-We create a LogisticRegression model and use GridSearchCV to find the best combination of hyperparameters based on accuracy. We iterate over the batches of data and train the model.
-
-We print the best hyperparameters, accuracy, confusion matrix, precision, and recall for the logistic regression model.
-
-
-```python
-logistic_regression = GridSearchCV(LogisticRegression(), param_grid = param_logistic, cv=2, scoring='accuracy')
-
-for i in range(num_batches):
-    start_idx = i * batch_size
-    end_idx = (i + 1) * batch_size
-
-    X_batch = X_train_scaled[start_idx:end_idx]
-    y_batch = y_train[start_idx:end_idx]
-
-    logistic_regression.fit(X_batch, y_batch)
-
-
-y_pred_logistic = logistic_regression.predict(X_test_scaled)
-accuracy_logistic = accuracy_score(y_test, y_pred_logistic)
-print(f'Best Params : {logistic_regression.best_params_}')
-print(f'Accuracy : {accuracy_logistic}\n\n')
-
-confusion_logistic = confusion_matrix(y_test, y_pred_logistic)
-precision_logistic = precision_score(y_test, y_pred_logistic,average='macro')
-recall_logistic = recall_score(y_test, y_pred_logistic,average='macro')
-
-print(f'Confusion Matrix:\n{confusion_logistic}')
-print(f'Precision: {precision_logistic:.2f}')
-print(f'Recall: {recall_logistic:.2f}')
-```
-
-    Best Params : {'C': 10, 'max_iter': 800, 'multi_class': 'ovr', 'penalty': 'l1', 'solver': 'saga'}
-    Accuracy : 0.752952019994378
-    
-    
-    Confusion Matrix:
-    [[ 14483   5524    571   4040]
-     [  5398   5666   6132  42940]
-     [    94    328 312610  14330]
-     [   672   1433  47731  60995]]
-    Precision: 0.62
-    Recall: 0.55
-
-
-### k-Nearest Neighbors (KNN)
-We follow a similar process for KNN. We define a parameter grid with 'n_neighbors' and 'weights' as the hyperparameters.
-
-
-```python
-param_knn = {
-    'n_neighbors': [3, 5, 7],
-    'weights': ['uniform', 'distance'],
-}
-```
-
-We create a KNeighborsClassifier model, perform grid search for hyperparameter tuning, iterate over data batches for training, and evaluate the model.
-
-We print the best hyperparameters, accuracy, confusion matrix, precision, and recall for the KNN model.
-
-
-```python
-knn_classifier = GridSearchCV(KNeighborsClassifier(), param_grid=param_knn, cv=2, scoring='accuracy')
-
-for i in range(num_batches):
-    start_idx = i * batch_size
-    end_idx = (i + 1) * batch_size
-
-    X_batch = X_train_scaled[start_idx:end_idx]
-    y_batch = y_train[start_idx:end_idx]
-
-    knn_classifier.fit(X_batch, y_batch)
-
-y_pred_knn = knn_classifier.predict(X_test_scaled)
-accuracy_knn = accuracy_score(y_test, y_pred_knn)
-print(f'Best Params : {knn_classifier.best_params_}')
-print(f'Accuracy : {accuracy_knn}\n\n')
-
-confusion_knn = confusion_matrix(y_test, y_pred_knn)
-precision_knn = precision_score(y_test, y_pred_knn,average='macro')
-recall_knn = recall_score(y_test, y_pred_knn,average='macro')
-
-print(f'Confusion Matrix:\n{confusion_knn}')
-print(f'Precision: {precision_knn:.2f}')
-print(f'Recall: {recall_knn:.2f}')
-```
-
-    Best Params : {'n_neighbors': 7, 'weights': 'distance'}
-    Accuracy : 0.7492996422199573
-    
-    
-    Confusion Matrix:
-    [[ 12628   8292    743   2955]
-     [  4908  26955   5469  22804]
-     [    70   2783 299502  25007]
-     [   690  18674  38708  52759]]
-    Precision: 0.64
-    Recall: 0.59
-
-
-### Decision Tree Classifier
-
-We start by defining a parameter grid for hyperparameter tuning with the Decision Tree Classifier. We consider various values for 'criterion' (impurity criterion) and 'max_depth' (maximum depth of the tree).
-
-
 
 ```python
 param_tree = {
@@ -667,10 +1019,6 @@ param_tree = {
     'max_depth': [20,30],
 }
 ```
-
-We create a DecisionTreeClassifier model and use GridSearchCV to find the best combination of hyperparameters based on accuracy. We iterate over the batches of data and train the model.
-
-We print the best hyperparameters, accuracy, confusion matrix, precision, and recall for the Decision Tree Classifier.
 
 
 ```python
@@ -712,151 +1060,18 @@ print(f'Recall: {recall_tree:.2f}')
     Recall: 0.75
 
 
-### Random Forest Classifier
-We follow a similar process for the Random Forest Classifier. We define a parameter grid with 'n_estimators' (number of trees in the forest), 'criterion,' and 'max_depth' as the hyperparameters.
-
-
-
 
 ```python
-param_forest = {
-    'n_estimators': [50, 100, 200],
-    'criterion': ['gini', 'entropy'],
-    'max_depth': [10, 20, 30],
-}
-```
-
-We create a RandomForestClassifier model, perform grid search for hyperparameter tuning, iterate over data batches for training, and evaluate the model.
-
-We print the best hyperparameters, accuracy, confusion matrix, precision, and recall for the Random Forest Classifier.
+plt.figure(figsize=(10, 5))
 
 
+clf_names = ['Decision Tree']
 
 
-```python
-forest_classifier = GridSearchCV(RandomForestClassifier(), param_grid=param_forest, cv=2, scoring='accuracy')
-
-for i in range(num_batches):
-    start_idx = i * batch_size
-    end_idx = (i + 1) * batch_size
-
-    X_batch = X_train_scaled[start_idx:end_idx]
-    y_batch = y_train[start_idx:end_idx]
-
-    forest_classifier.fit(X_batch, y_batch)
-
-y_pred_forest = forest_classifier.predict(X_test_scaled)
-accuracy_forest = accuracy_score(y_test, y_pred_forest)
-print(f'Best Params  : {forest_classifier.best_params_}')
-print(f'Accuracy : {accuracy_forest}\n\n')
-
-confusion_forest = confusion_matrix(y_test, y_pred_forest)
-precision_forest = precision_score(y_test, y_pred_forest,average='macro')
-recall_forest = recall_score(y_test, y_pred_forest,average='macro')
-
-print(f'Confusion Matrix:\n{confusion_forest}')
-print(f'Precision: {precision_forest:.2f}')
-print(f'Recall: {recall_forest:.2f}')
-```
-
-    Best Params  : {'criterion': 'gini', 'max_depth': 10, 'n_estimators': 200}
-    Accuracy : 0.7966065394772319
-    
-    
-    Confusion Matrix:
-    [[ 16802   6656    206    954]
-     [  4839  33115   2356  19826]
-     [    24    959 306025  20354]
-     [   248  16933  33009  60641]]
-    Precision: 0.71
-    Recall: 0.68
-
-
-These operations provide an overview of model training, hyperparameter tuning, and evaluation for Logistic Regression , KNN classifiers ,the Decision Tree Classifier and Random Forest Classifier.
-
-
-## Model Comparison
-
-In this section, we evaluate and compare the performance of different machine learning models, including Logistic Regression, K-Nearest Neighbors (KNN), Decision Tree, and Random Forest. We calculate and visualize accuracy, precision, recall, and confusion matrices for these models.
-
-
-
-
-
-
-
-### Model Metrics and Visualization: Accuracy, Precision, and Recall
-We collect the precision, recall, and accuracy scores for each model and create bar charts to visually compare the accuracy, precision, and recall scores of the different models.
-
-
-```python
-models = ['logistic_regression', 'KNN', 'Decision Tree ','Random Forest']
-precision_scores = [precision_logistic, precision_knn, precision_tree,precision_forest]
-recall_scores = [recall_logistic, recall_knn, recall_tree,recall_forest]
-Accuracy_scores = [accuracy_logistic, accuracy_knn, accuracy_tree, accuracy_forest]
-confusion_scores = [confusion_logistic, confusion_knn, confusion_tree,confusion_forest]
-
-
-plt.figure(figsize=(10, 6))
-plt.bar(models, Accuracy_scores, color='r', alpha=0.6, label='Accuracy')
-plt.xlabel('Models or Settings')
-plt.ylabel('Accuracy')
-plt.legend()
-
-
-plt.figure(figsize=(10, 6))
-plt.bar(models, precision_scores, color='b', alpha=0.6, label='Precision')
-plt.xlabel('Models or Settings')
-plt.ylabel('Precision Score')
-plt.legend()
-
-
-plt.figure(figsize=(10, 6))
-plt.bar(models, recall_scores, color='g', alpha=0.6, label='Recall')
-plt.xlabel('Models or Settings')
-plt.ylabel('Recall Score')
-plt.legend()
-
-plt.show()
-```
-
-
-    
-![png](images/acu.png)
-    
-
-
-
-    
-![png](images/pre.png)
-    
-
-
-
-    
-![png](images/rec.png)
-    
-
-
-### Visualization: Confusion Matrix Heatmaps
-We display confusion matrix heatmaps for each model to visualize the performance in more detail.
-
-These visualizations and metrics provide a comprehensive comparison of the model performances, helping to assess which model is the most suitable for your task.
-
-
-```python
-plt.figure(figsize=(30, 10))
-
-
-clf_names = ['Logistic Regression', 'K-Nearest Neighbors', 'Decision Tree', 'Random Forest']
-
-for i, confusion in enumerate(confusion_scores):
-
-    plt.subplot(1, 4, i + 1)
-    sns.heatmap(confusion, annot=True, fmt='d', cmap='Blues', cbar=False)
-    plt.xlabel('Predicted Labels')
-    plt.ylabel('True Labels')
-    plt.title(f'Confusion Matrix Heatmap\n({clf_names[i]})')
+sns.heatmap(confusion_tree, annot=True, fmt='d', cmap='Blues', cbar=False)
+plt.xlabel('Predicted Labels')
+plt.ylabel('True Labels')
+plt.title(f'Confusion Matrix Heatmap\n({clf_names[0]})')
 
 plt.tight_layout()
 plt.show()
@@ -864,5 +1079,268 @@ plt.show()
 
 
     
-![png](images/all.png)
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_81_0.png)
+    
+### Random Forest Classifier and Analysis 
+
+In this code cell, we perform analysis using the Random Forest Classifier (RFC) . The primary steps and details are as follows:
+
+- **Parameter Grid for Random Forest Classifier**: We define a parameter grid for hyperparameter tuning of the Random Forest Classifier (RFC), including parameters like the number of estimators, maximum features, and minimum samples per leaf. But I have used Random Forest Classifier without GridSearchCV because it is taking too much and after that also accuracy remains almost same. Even RandomizedSearchCV taking too long. So, I avoided any hyperparameter tuning in Random Forest Classifier.
+
+
+- **Data Preprocessing**: For each county, we extract the relevant data and perform the following preprocessing steps:
+    - Define the target variable and feature variables .
+    - Split the data into features traning and test set.
+
+    
+- **Random Forest Classifier (RFC)**: We use a Random Forest Classifier model for analysis. The code includes the option to perform hyperparameter tuning , although it is currently commented out in favor of a default RFC.
+
+- **Model Evaluation**:  we evaluate the RFC model on the test data and compute various performance metrics, including accuracy, precision, recall, support, and F1-score. 
+
+
+
+
+
+```python
+
+target = 'APR Risk of Mortality'
+
+
+features = ['Health Service Area', 'Hospital County', 'Facility ID', 'Age Group', 'Gender', 'Race', 'Ethnicity', 'Type of Admission', 'Patient Disposition', 'CCS Diagnosis Code',
+            'CCS Procedure Code', 'APR DRG Code', 'APR MDC Code', 'APR Medical Surgical Description', 'APR Severity of Illness Code',
+            'Birth Weight', 'Abortion Edit Indicator', 'Emergency Department Indicator']
+```
+
+
+```python
+
+X_train, X_test, y_train, y_test = train_test_split(training_set[features], training_set[target], test_size=0.2, random_state=42)
+```
+
+
+```python
+'''param_rgb = {
+                'n_estimators' : [5,20,50],
+                'max_features' : ['auto', 'sqrt'], 
+                'min_samples_leaf' : [1, 3, 4], 
+                'max_depth' : [25,50,100],
+            }''''''
+```
+
+
+```python
+rfc = RandomForestClassifier(max_depth=25, random_state=42)
+rfc.fit(X_train, y_train)
+```
+```python
+y_pred = rfc.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+confusion_matrix_result = confusion_matrix(y_test, y_pred)
+classification_report_result = classification_report(y_test, y_pred)
+
+print("Accuracy:", accuracy)
+print("Classification Report:\n", classification_report_result)
+```
+
+    Accuracy: 0.8072611418626158
+    Classification Report:
+                   precision    recall  f1-score   support
+    
+               0       0.76      0.71      0.73     24247
+               1       0.58      0.56      0.57     59720
+               2       0.91      0.93      0.92    327431
+               3       0.61      0.60      0.61    110889
+    
+        accuracy                           0.81    522287
+       macro avg       0.72      0.70      0.71    522287
+    weighted avg       0.80      0.81      0.81    522287
+
+
+### XGBoost Classifier and Analysis by County
+
+In this code cell, we perform analysis using the XGBoost Classifier (XGBC) separately for each 'Hospital County' in the dataset. The primary steps and details are as follows:
+
+- **Parameter Grid for XGBoost Classifier**: We define a parameter grid for hyperparameter tuning of the XGBoost Classifier (XGBC), including parameters like learning rate, the number of estimators, and maximum depth. But I have used XGBoost Classifier without GridSearchCV because it is taking too much and after that also accuracy remains almost same. Even RandomizedSearchCV taking too long. So, I avoided any hyperparameter tuning in XGBoost Classifier.
+
+- **Iterating Through Counties**: We loop through each 'Hospital County' in the dataset and perform analysis separately for each county. We create subplots for visualization.
+
+- **Data Preprocessing**: For each county, we extract the relevant data and perform the following preprocessing steps:
+    - Drop the 'Hospital County' column as it is used for county-wise analysis.
+    - Split the data into features (X) and the target variable (y).
+    - Scale the features using Min-Max scaling(I used Min-Max scaling because I didn't find that this data is normally distributed) .
+    - Apply Principal Component Analysis (PCA) to reduce dimensionality while retaining 95% of the variance in the data.
+
+- **XGBoost Classifier (XGBC)**: We use the XGBoost Classifier model for analysis. The code includes the option to perform hyperparameter tuning using GridSearchCV, although it is currently commented out in favor of default XGBC hyperparameters.
+
+- **Model Evaluation**: For each county, we evaluate the XGBC model on the test data and compute various performance metrics, including accuracy, precision, recall, and F1-score. We also create a confusion matrix to visualize the model's performance.
+
+- **Plotting Results**: The results, including confusion matrices and performance metrics, are plotted and displayed for each county. The subplots are organized in a grid, with up to three counties per row.
+
+
+
+
+```python
+param_xgb = {
+                'learning_rate': [0.1, 0.2, 0.3],
+                'n_estimators': [100, 200, 300],
+                'max_depth': [3, 4]
+            }
+```
+
+
+```python
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+fig.suptitle('XGBoost Classifier')
+
+for i, county in enumerate(counties):
+    df = hospital_data_final[hospital_data_final['Hospital County'] == county].copy() 
+    df.drop(['Hospital County'], axis=1, inplace=True)
+    
+    X = df.drop('APR Risk of Mortality', axis=1)
+    y = df['APR Risk of Mortality']
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    
+    sc = MinMaxScaler()
+    X_train_sc = sc.fit_transform(X_train)
+    X_test_sc = sc.transform(X_test)
+    
+    pca = PCA(n_components=0.95)
+    X_train_scaled = pca.fit_transform(X_train_sc)
+    X_test_scaled = pca.transform(X_test_sc)
+    
+    xgb = XGBClassifier(learning_rate=0.1, n_estimators=100, max_depth=3)
+    xgb.fit(X_train_scaled, y_train)
+    
+    y_pred = xgb.predict(X_test_scaled)
+    
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average='weighted')
+    recall = recall_score(y_test, y_pred, average='weighted')
+    f1 = f1_score(y_test, y_pred, average='weighted')
+    
+    cm = confusion_matrix(y_test, y_pred)
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot(cmap='viridis', ax=axs[i % 3])
+    disp.ax_.set_title(f'County {i} - Accuracy: {accuracy:.2f}\nPrecision: {precision:.2f}, Recall: {recall:.2f}, F1: {f1:.2f}', fontsize=10)
+
+    if i % 3 == 2 or i == len(counties) - 1:
+        plt.show()
+        if i != len(counties) - 1:
+            fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+```
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_90_0.png)
+    
+
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_90_1.png)
+    
+
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_90_2.png)
+
+
+### AdaBoost Classifier and Analysis by Hospital Admission Types
+
+In this code cell, we perform analysis using the AdaBoost Classifier  separately for each 'Admission Types' in the dataset. The primary steps and details are as follows:
+
+- **Parameter Grid for AdaBoost Classifier**: We define a parameter grid for hyperparameter tuning of the XGBoost Classifier (XGBC), including parameters like learning rate, the number of estimators, and algorithm'. But I have used XGBoost Classifier without GridSearchCV because it is taking too much and after that also accuracy remains almost same. Even RandomizedSearchCV taking too long. So, I avoided any hyperparameter tuning in XGBoost Classifier.
+
+- **Iterating Through Admission Types**: We loop through each 'Admission Types' in the dataset and perform analysis separately for each county. We create subplots for visualization.
+
+- **Data Preprocessing**: For each Admission Types, we extract the relevant data and perform the following preprocessing steps:
+    - Drop the 'Type of Admission' column as it is used for Admission-wise analysis.
+    - Split the data into features (X) and the target variable (y).
+    - Scale the features using Min-Max scaling(I used Min-Max scaling because I didn't find that this data is normally distributed) .
+    - Apply Principal Component Analysis (PCA) to reduce dimensionality while retaining 95% of the variance in the data.
+
+- **AdaBoost Classifier**: We use the AdaBoost Classifier model for analysis. The code includes the option to perform hyperparameter tuning using GridSearchCV, although it is currently commented out in favor of default AdaBoost Classifier hyperparameters.
+
+- **Model Evaluation**: For each Admission Types, we evaluate the AdaBoost Classifier model on the test data and compute various performance metrics, including accuracy, precision, recall, and F1-score. We also create a confusion matrix to visualize the model's performance.
+
+- **Plotting Results**: The results, including confusion matrices and performance metrics, are plotted and displayed for each county. The subplots are organized in a grid, with up to three counties per row.
+
+
+
+```python
+
+'''param_adaboost = {
+    'n_estimators': [50, 100, 200],  
+    'learning_rate': [0.01, 0.1, 0.5],  
+    'algorithm': ['SAMME', 'SAMME.R']  
+    
+}
+'''
+```
+
+
+```python
+
+
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+admissions = sorted(hospital_data_final['Type of Admission'].unique())
+fig.suptitle('AdaBoost Classifier')
+
+for i, admission in enumerate(admissions):
+    df = hospital_data_final[hospital_data_final['Type of Admission'] == admission].copy()
+    df.drop(['Type of Admission'], axis=1, inplace=True)
+
+    X = df.drop('APR Risk of Mortality', axis=1)
+    y = df['APR Risk of Mortality']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    sc = MinMaxScaler()
+    X_train_sc = sc.fit_transform(X_train)
+    X_test_sc = sc.transform(X_test)
+    
+    pca = PCA(n_components=0.95)
+    X_train_scaled = pca.fit_transform(X_train_sc)
+    X_test_scaled = pca.transform(X_test_sc)
+
+    adaboost = AdaBoostClassifier()
+    # You can use grid search for hyperparameter tuning if needed
+    # adaboost = GridSearchCV(AdaBoostClassifier(), param_grid=param_adaboost, cv=2, scoring='accuracy')
+    
+    adaboost.fit(X_train_scaled, y_train)
+
+    y_pred = adaboost.predict(X_test_scaled)
+    
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average='weighted')
+    recall = recall_score(y_test, y_pred, average='weighted')
+    f1 = f1_score(y_test, y_pred, average='weighted')
+    
+    cm = confusion_matrix(y_test, y_pred)
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot(cmap='viridis', ax=axs[i % 3])
+    disp.ax_.set_title(f'Admission {i} - Accuracy: {accuracy:.2f}\nPrecision: {precision:.2f}, Recall: {recall:.2f}, F1: {f1:.2f}', fontsize=10)
+
+    if i % 3 == 2 or i == len(admissions) - 1:
+        plt.show()
+        if i != len(admissions) - 1:
+            fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+```
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_93_0.png)
+    
+
+
+
+    
+![png](data-mining-cp-2-main_files/data-mining-cp-2-main_93_1.png)
     
