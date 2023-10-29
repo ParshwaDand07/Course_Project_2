@@ -68,13 +68,26 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split,GridSearchCV
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import precision_score, recall_score, confusion_matrix
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.decomposition import PCA
+from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import AdaBoostClassifier
+import warnings 
+warnings.filterwarnings('ignore')r
+from sklearn.tree import DecisionTreeClassifier
 ```
 
 ## Goal and Objectives
